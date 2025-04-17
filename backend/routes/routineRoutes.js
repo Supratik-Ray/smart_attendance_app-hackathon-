@@ -23,26 +23,31 @@ router.get('/all/:teacherId', async (req, res) => {
 })
 
 
-//sets routine status by id and update lastUPdated automatically
-router.patch("/:routineId", async (req,res)=>{
-    try{
-        const { routineId } = req.params
-        const { status } = req.body
+// Sets routine status by ID and updates lastUpdated automatically
+router.patch("/:routineId", async (req, res) => {
+    try {
+        const { routineId } = req.params;
+        const { status } = req.body; // Expecting a single status value to be added
 
-        const updatedRoutine = await Routine.findByIdAndUpdate(routineId,{
-            status,
-            lastUpdated: new Date().toISOString().split('T')[0]
-        },
-        {new: true}
-    )
-    if(!updatedRoutine){
-        return res.status(404).json({message: "Routine Not Found."})
+        const updatedRoutine = await Routine.findByIdAndUpdate(
+            routineId,
+            {
+                $push: { status: status },
+                lastUpdated: new Date().toISOString().split('T')[0]
+            },
+            { new: true }
+        );
+
+        if (!updatedRoutine) {
+            return res.status(404).json({ message: "Routine Not Found." });
+        }
+
+        res.json(updatedRoutine);
+    } catch (error) {
+        return res.status(500).json({ message: "Server Error", error: error.message });
     }
-    res.json(updatedRoutine)
-    }catch(error){
-        return res.status(500).json({message: "Server Error",error: error.message})
-    }
-})
+});
+
 
 // Update a specific session by sessionId
 router.patch('/session/:sessionId', async (req, res) => {
