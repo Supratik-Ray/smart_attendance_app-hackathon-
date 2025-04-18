@@ -7,6 +7,19 @@ const Teacher = require('../models/Teacher');
 
 const router = express.Router()
 
+// Delete all routines (sessions)
+router.delete('/delete-all', async (req, res) => {
+    try {
+        const result = await Routine.deleteMany({});
+        res.status(200).json({
+            message: "All sessions deleted successfully",
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
 // Get all sessions for a particular teacher irrespective of day
 router.get('/all/:teacherId', async (req, res) => {
     try {
@@ -195,18 +208,7 @@ router.delete('/:teacherId/:day', async (req, res)=>{
     }
 })
 
-// Delete all routines (sessions)
-router.delete('/delete-all', async (req, res) => {
-    try {
-        const result = await Routine.deleteMany({});
-        res.status(200).json({
-            message: "All sessions deleted successfully",
-            deletedCount: result.deletedCount
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-});
+
 
 
 
