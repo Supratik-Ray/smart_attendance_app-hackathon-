@@ -166,6 +166,40 @@ router.get("/totalClasses/:dept/:className/:subject", async (req, res) => {
   }
 });
 
+// Add multiple day attendances for a student for a subject
+router.post("/multiple", async (req, res) => {
+  try {
+    const {
+      studentName,
+      studentRoll,
+      dept,
+      className,
+      subject,
+      attendanceRecords, // Array of { isPresent: Boolean, createdAt: Date }
+    } = req.body;
+
+    if (!Array.isArray(attendanceRecords) || attendanceRecords.length === 0) {
+      return res.status(400).json({ error: "attendanceRecords must be a non-empty array" });
+    }
+
+    const recordsToInsert = attendanceRecords.map((record) => ({
+      studentName,
+      studentRoll,
+      dept,
+      className,
+      subject,
+      isPresent: record.isPresent,
+      createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
+    }));
+
+    const insertedRecords = await attendance.insertMany(recordsToInsert);
+    res.status(201).json({ message: "Multiple attendances added", data: insertedRecords });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 // to add attendance-working
 router.post("/", async (req, res) => {
   try {
