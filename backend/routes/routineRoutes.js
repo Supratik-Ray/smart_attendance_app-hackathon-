@@ -195,5 +195,19 @@ router.delete('/:teacherId/:day', async (req, res)=>{
     }
 })
 
+// Delete all routines (sessions)
+router.delete('/delete-all', async (req, res) => {
+    try {
+        const result = await Routine.deleteMany({});
+        res.status(200).json({
+            message: "All sessions deleted successfully",
+            deletedCount: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+
 
 module.exports = router
