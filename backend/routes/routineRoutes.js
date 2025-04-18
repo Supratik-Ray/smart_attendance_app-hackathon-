@@ -195,21 +195,4 @@ router.post('/:teacherId/:day', async (req, res) => {
 
 
 
-//delete routine for a specific day
-router.delete('/:teacherId/:day', async (req, res)=>{
-    try{
-        const deleted = await Routine.findOneAndDelete({teacherId: req.params.teacherId, day: req.params.day})
-        if(!deleted){
-            return res.status(404).json({message: "Routine not found"})
-        }
-        res.status(200).json({message: "Routine deleted successfully!"})
-    }catch(error){
-        res.status(500).json({message: "server error",error})
-    }
-})
-
-
-
-
-
 module.exports = router
