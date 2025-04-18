@@ -8,7 +8,7 @@ const Teacher = require('../models/Teacher');
 const router = express.Router()
 
 // Delete all routines (sessions)
-router.delete('/delete-all', async (req, res) => {
+router.delete('/deleteAll', async (req, res) => {
     try {
         const result = await Routine.deleteMany({});
         res.status(200).json({
