@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/screens/admin_screens/day_row.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:frontend/utility/show_snackbar.dart';
 
 class AddRoutine extends StatefulWidget {
   const AddRoutine({super.key});
@@ -21,6 +24,7 @@ class _AddRoutineState extends State<AddRoutine> {
 
   var _selectedSemester = '1';
   final _sectionController = TextEditingController();
+  final _departmentController = TextEditingController();
 
   // List<dynamic> teachers = [];
 
@@ -33,14 +37,44 @@ class _AddRoutineState extends State<AddRoutine> {
   void _validateAndAddRoutine() async {
     if (!_formKey.currentState!.validate()) return;
 
+    var sem = _selectedSemester;
+    var section = _sectionController.text;
+    var department = _departmentController.text;
+
+    List<Future<http.Response>> futures = [];
     for (final day in schedule.keys) {
       for (final session in schedule[day]!) {
         final teacherId = session['teacherId'];
 
         var url = Uri.parse(
-          "https://smart-attendance-app-hackathon.onrender.com/api/routine",
+          "https://smart-attendance-app-hackathon.onrender.com/api/routine/$teacherId/$day",
         );
+
+        var future = http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'department': department,
+            'semester': sem,
+            'section': section,
+            'subject': session['subject'],
+            'startTime': session['start'],
+            'endTime': session['end'],
+          }),
+        );
+
+        futures.add(future);
       }
+    }
+    try {
+      var responses = await Future.wait(futures);
+
+      if (responses.every((response) => response.statusCode == 201)) {
+        if (!mounted) return;
+        showSuccessSnackBar(context, "added the routine successfully!");
+      }
+    } catch (e) {
+      print("some error occured!");
     }
   }
 
@@ -95,6 +129,23 @@ class _AddRoutineState extends State<AddRoutine> {
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return "please add a section";
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  keyboardType: TextInputType.text,
+                  controller: _departmentController,
+                  decoration: const InputDecoration(
+                    labelText: "department",
+                    hintText: "Enter your department",
+                    prefixIcon: Icon(Icons.door_back_door),
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return "please add a department";
                     }
                     return null;
                   },

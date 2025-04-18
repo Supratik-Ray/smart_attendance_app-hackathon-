@@ -26,15 +26,19 @@ class _AddRoutineModalState extends State<AddRoutineModal> {
 
   Future<void> getTeachers() async {
     var url = Uri.parse(
-      "https://smart-attendance-app-hackathon.onrender.com/api/profile/teachers",
+      "https://smart-attendance-app-hackathon.onrender.com/api/teachers/teachers",
     );
 
-    var res = await http.get(url);
-    var data = jsonDecode(res.body);
-    teachers = data;
-    assignedTeacher = "${data[0]['_id']}-${data[0]['name']}";
+    try {
+      var res = await http.get(url);
+      var data = jsonDecode(res.body);
+      teachers = data;
+      assignedTeacher = "${data[0]['_id']}-${data[0]['name']}";
 
-    setState(() {});
+      setState(() {});
+    } catch (e) {
+      print("some error occured: $e");
+    }
   }
 
   @override

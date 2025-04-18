@@ -1,20 +1,26 @@
 import 'package:intl/intl.dart';
 
-class RoutineItem {
-  final String title;
+class Session {
+  final String id;
+  final String subject;
+  final String department;
+  final String semester;
   final String section;
   final String startTimeString;
   final String endTimeString;
+  final List<dynamic> status;
   late DateTime startTime;
   late DateTime endTime;
-  final String dept;
 
-  RoutineItem({
-    required this.title,
+  Session({
+    required this.id,
+    required this.subject,
+    required this.department,
+    required this.semester,
     required this.section,
     required this.startTimeString,
     required this.endTimeString,
-    required this.dept,
+    required this.status,
   }) {
     startTime = _convertToDateTime(startTimeString);
     endTime = _convertToDateTime(endTimeString);

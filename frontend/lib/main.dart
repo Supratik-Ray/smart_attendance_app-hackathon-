@@ -12,6 +12,9 @@ import 'firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 //for notification
 import 'package:frontend/utility/noti_service.dart';
+//provider
+import 'package:frontend/providers/teacher_provider.dart';
+import 'package:provider/provider.dart';
 
 final kcolorScheme = ColorScheme.fromSeed(seedColor: Colors.blue);
 NotiService notiService = NotiService();
@@ -31,11 +34,12 @@ void main() async {
   //setup notiservice
   notiService.initNotification();
 
-  //get the current user
+  // get the current user
   SharedPreferences prefs = await SharedPreferences.getInstance();
   String? userRole = prefs.getString("user_role");
 
   Widget screen = const LoginScreen();
+  TeacherProvider teacherProvider = TeacherProvider();
 
   if (userRole == "student") {
     screen = const Layout(currentUser: UserRole.student);
@@ -43,12 +47,27 @@ void main() async {
 
   if (userRole == "teacher") {
     screen = const Layout(currentUser: UserRole.teacher);
+    await teacherProvider.loadTeacherFromPrefs();
   }
 
   _setupFCMListeners();
 
   runApp(
-    MaterialApp(
+    MultiProvider(
+      providers: [ChangeNotifierProvider(create: (context) => teacherProvider)],
+      child: MyApp(screen: screen),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key, required this.screen});
+
+  final Widget screen;
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
       debugShowCheckedModeBanner: false,
       theme: ThemeData().copyWith(
         colorScheme: kcolorScheme,
@@ -59,8 +78,8 @@ void main() async {
         ),
       ),
       home: screen,
-    ),
-  );
+    );
+  }
 }
 
 Future<void> _requestPermissions() async {

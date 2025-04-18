@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/models/assigned_classes/assigned_class.dart';
 import 'package:frontend/models/assigned_classes/assigned_classes.dart';
+import 'package:frontend/providers/teacher_provider.dart';
 import 'package:frontend/screens/teacher_screens/class_summary.dart';
 import 'package:frontend/widgets/teacher_widgets/class_card.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
+import 'package:provider/provider.dart';
 
 class ClassesList extends StatefulWidget {
   const ClassesList({super.key});
@@ -11,10 +17,6 @@ class ClassesList extends StatefulWidget {
 }
 
 class _ClassesListState extends State<ClassesList> {
-  final AssignedClasses assignedClasses = AssignedClasses();
-
-  var _currentSem = 4;
-
   void _selectClass(subject, className) {
     Navigator.push(
       context,
@@ -27,56 +29,42 @@ class _ClassesListState extends State<ClassesList> {
   }
 
   @override
-  void initState() {
-    super.initState();
-    assignedClasses.getAssignedClasses();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 32),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          DropdownButton(
-            value: _currentSem,
-            items: const [
-              DropdownMenuItem(value: 1, child: Text("SEM1")),
-              DropdownMenuItem(value: 2, child: Text("SEM2")),
-              DropdownMenuItem(value: 3, child: Text("SEM3")),
-              DropdownMenuItem(value: 4, child: Text("SEM4")),
-            ],
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() {
-                _currentSem = value;
-              });
-            },
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-                childAspectRatio: 1,
+    TeacherProvider teacherProvider = Provider.of<TeacherProvider>(context);
+    var assignedClasses = teacherProvider.teacher!.assignedClasses;
+    return assignedClasses.isEmpty
+        ? const Center(
+          child: Text("No classes found!", style: TextStyle(fontSize: 20)),
+        )
+        : Padding(
+          padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 32),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
+              Expanded(
+                child: GridView.builder(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1,
+                  ),
+                  itemCount: assignedClasses.length,
+                  itemBuilder: (ctx, index) {
+                    final classItem = assignedClasses[index];
+                    return ClassCard(
+                      subject: classItem.subject,
+                      semester: classItem.semester,
+                      section: classItem.section,
+                      dept: classItem.dept,
+                      onSelectclassItem: _selectClass,
+                    );
+                  },
+                ),
               ),
-              itemCount: assignedClasses.classes.length,
-              itemBuilder: (ctx, index) {
-                final classItem = assignedClasses.classes[index];
-                return ClassCard(
-                  subject: classItem.subject,
-                  semester: classItem.semester,
-                  section: classItem.section,
-                  onSelectclassItem: _selectClass,
-                );
-              },
-            ),
+            ],
           ),
-        ],
-      ),
-    );
+        );
   }
 }

@@ -2,11 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:frontend/main.dart';
 import 'package:frontend/layout.dart';
+import 'package:frontend/providers/teacher_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:frontend/utility/geofencing.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 Geofencing geofencing = Geofencing();
 
@@ -61,6 +63,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
       //add to sharedpreference
       await addToSharedPreference(user, _userRole);
+
+      //update the provider data
+      if (_userRole == UserRole.teacher) {
+        if (!mounted) return;
+        TeacherProvider teacherProvider = Provider.of<TeacherProvider>(
+          context,
+          listen: false,
+        );
+        teacherProvider.setTeacher(user);
+      }
 
       //add FCM token if student
       if (_userRole == UserRole.student) {
@@ -146,7 +158,7 @@ class _LoginScreenState extends State<LoginScreen> {
     }
 
     setState(() {
-      _errorText = data.message;
+      _errorText = data['message'];
     });
 
     return {};

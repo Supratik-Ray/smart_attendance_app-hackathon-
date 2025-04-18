@@ -16,6 +16,7 @@ class AttendanceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final name = student['name'];
     final roll = student['roll'].toString();
+    final displayRoll = roll.substring(roll.length - 3);
     final isInClass = student['is_in_class'];
 
     return Opacity(
@@ -30,16 +31,15 @@ class AttendanceTile extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text(roll, style: Theme.of(context).textTheme.bodyLarge),
+                  Text(
+                    displayRoll,
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
                   const SizedBox(width: 16),
                   Text("$name", style: Theme.of(context).textTheme.bodyLarge),
                 ],
               ),
 
-              // Checkbox(
-              //   value: isPresent,
-              //   onChanged: isInClass ? onChanged : null,
-              // ),
               Row(
                 children: [
                   ChoiceChip(

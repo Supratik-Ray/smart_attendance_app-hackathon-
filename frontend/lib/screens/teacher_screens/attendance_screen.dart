@@ -9,9 +9,11 @@ class AttendanceScreen extends StatefulWidget {
     super.key,
     required this.section,
     required this.subject,
+    required this.onAttendanceGiven,
   });
   final String section;
   final String subject;
+  final void Function() onAttendanceGiven;
 
   @override
   State<AttendanceScreen> createState() => _AttendanceScreenState();
@@ -70,7 +72,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
             'dept': student['dept'],
             'className': student['className'],
             'subject': widget.subject,
-            'isPresent': student['isPresent'] ?? false,
+            'isPresent': student['is_present'] ?? false,
           }),
         ),
       );
@@ -88,6 +90,7 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         context,
         "Attendance submitted successfully for all students!",
       );
+      widget.onAttendanceGiven();
       Navigator.pop(context);
     }
 

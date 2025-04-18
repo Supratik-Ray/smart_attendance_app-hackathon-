@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 class ClassCard extends StatelessWidget {
   const ClassCard({
     super.key,
+    required this.dept,
     required this.subject,
     required this.semester,
     required this.section,
     required this.onSelectclassItem,
   });
 
+  final String dept;
   final String subject;
   final String semester;
   final String section;
@@ -49,20 +51,21 @@ class ClassCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
+              Text(
+                "dept: $dept",
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  fontSize: 16,
+                ),
+              ),
+              const SizedBox(height: 16),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text(
-                    "Sem: ",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
-
                   Text(
-                    semester,
+                    "Sem: $semester",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
@@ -70,21 +73,9 @@ class ClassCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-                ],
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text(
-                    "Sec: ",
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontSize: 16,
-                    ),
-                  ),
+                  const SizedBox(width: 16),
                   Text(
-                    section,
+                    "Sec: $section",
                     textAlign: TextAlign.center,
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,

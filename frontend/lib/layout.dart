@@ -34,7 +34,7 @@ final List<Map<String, dynamic>> _teacherScreens = [
   },
   {
     'widget': const ClassesList(),
-    'title': 'Summary',
+    'title': 'Classes',
     'icon': const Icon(Icons.analytics),
   },
 ];
