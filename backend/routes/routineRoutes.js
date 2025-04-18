@@ -2,8 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 
 const Routine = require('../models/sessionSchema')
-const Session = require('../models/sessionSchema')
-const Teacher = require('../models/Teacher'); 
+const Teacher = require('../models/teacherSchema'); 
 
 const router = express.Router()
 
