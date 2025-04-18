@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 
 const Routine = require('../models/sessionSchema')
 const Session = require('../models/sessionSchema')
+const Teacher = require('../models/Teacher'); 
 
 const router = express.Router()
 
@@ -122,13 +123,37 @@ router.get('/:teacherId/:day', async (req, res) => {
 
 
 //creates routine for a specific day
-router.post('/:teacherId/:day', async (req,res)=>{
-    const {department, semester, section, subject, startTime, endTime } = req.body
 
-    if(!department || !semester || !section || !subject || !startTime || !endTime){
-        return res.status(400).json({message: "All fields are required."})
+
+router.post('/:teacherId/:day', async (req, res) => {
+    const { department, semester, section, subject, startTime, endTime } = req.body;
+
+    if (!department || !semester || !section || !subject || !startTime || !endTime) {
+        return res.status(400).json({ message: "All fields are required." });
     }
-    try{
+
+    try {
+        const teacher = await Teacher.findById(req.params.teacherId);
+        if (!teacher) {
+            return res.status(404).json({ message: "Teacher not found." });
+        }
+
+        const className = `${semester}-${section}`; // Combine for matching className
+
+        // Check if class is already assigned
+        const alreadyAssigned = teacher.assignedClasses.some(cls =>
+            cls.department === department &&
+            cls.className === className &&
+            cls.subject === subject
+        );
+
+        // If not assigned, push to assignedClasses
+        if (!alreadyAssigned) {
+            teacher.assignedClasses.push({ department, className, subject });
+            await teacher.save();
+        }
+
+        // Now create the routine
         const newRoutine = new Routine({
             teacherId: req.params.teacherId,
             day: req.params.day,
@@ -138,13 +163,20 @@ router.post('/:teacherId/:day', async (req,res)=>{
             subject,
             startTime,
             endTime,
-        })
-        await newRoutine.save()
-        return res.status(201).json({message: "Routine added successfully", routine:newRoutine})
-    }catch(error){
-        return res.status(500).json({error: error.message})
+        });
+
+        await newRoutine.save();
+
+        return res.status(201).json({
+            message: "Routine added successfully",
+            routine: newRoutine
+        });
+
+    } catch (error) {
+        return res.status(500).json({ error: error.message });
     }
-})
+});
+
 
 
 
