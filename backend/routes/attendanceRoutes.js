@@ -118,31 +118,38 @@ router.get("/:dept/:className/:subject/today", async (req, res) => {
   }
 });
 
-//To get all student record for a particular subject for last7days
+/**
+ * GET /api/attendance/:dept/:className/:subject/lastclasses
+ * Returns the last 7 class sessions (distinct by timestamp) for the given dept/class/subject,
+ * each with counts of present and absent students.
+ */
 router.get("/:dept/:className/:subject/lastclasses", async (req, res) => {
   try {
     const { dept, className, subject } = req.params;
 
-    const raw = await attendance.aggregate([
-      // 1) filter to this dept/class/subject
+    const result = await attendance.aggregate([
+      // 1) Filter to the requested dept, className, and subject
       {
         $match: { dept, className, subject }
       },
 
-      // 2) project a "sessionDate" string = YYYY‑MM‑DD of when the record was created
+      // 2) Project a "sessionKey" including full date+time up to seconds
       {
         $project: {
-          sessionDate: {
-            $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
+          sessionKey: {
+            $dateToString: {
+              format: "%Y-%m-%dT%H:%M:%S",
+              date: "$createdAt"
+            }
           },
           isPresent: 1
         }
       },
 
-      // 3) group by that sessionDate, summing present/absent
+      // 3) Group by sessionKey to tally present/absent per session
       {
         $group: {
-          _id: "$sessionDate",
+          _id: "$sessionKey",
           presentCount: {
             $sum: { $cond: ["$isPresent", 1, 0] }
           },
@@ -152,28 +159,28 @@ router.get("/:dept/:className/:subject/lastclasses", async (req, res) => {
         }
       },
 
-      // 4) sort by date descending (newest session first) and take 7
+      // 4) Sort sessions newest first and limit to 7
       { $sort: { "_id": -1 } },
       { $limit: 7 },
 
-      // 5) put back into ascending order (oldest ⇒ newest)
+      // 5) Re-sort back to oldest→newest
       { $sort: { "_id": 1 } },
 
-      // 6) clean up field names
+      // 6) Project final fields: sessionTime, studentsPresent, studentsAbsent
       {
         $project: {
           _id: 0,
-          date: "$_id",
+          sessionTime: "$_id",
           studentsPresent: "$presentCount",
           studentsAbsent: "$absentCount"
         }
       }
     ]);
 
-    res.status(200).json(raw);
+    return res.status(200).json(result);
   } catch (err) {
-    console.error("Error in lastclasses route:", err);
-    res.status(500).json({ error: err.message });
+    console.error("Error fetching lastclasses:", err);
+    return res.status(500).json({ error: err.message });
   }
 });
 
