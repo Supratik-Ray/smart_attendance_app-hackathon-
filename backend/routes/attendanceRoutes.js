@@ -119,58 +119,47 @@ router.get("/:dept/:className/:subject/today", async (req, res) => {
 });
 
 //To get all student record for a particular subject for last7days
-// router.get("/:dept/:className/:subject/lastweek", async (req, res) => {
-//   try {
-//     const { dept, className, subject } = req.params;
-//     const startDate = new Date();
-//     startDate.setDate(startDate.getDate() - 7);
-//     startDate.setHours(0, 0, 0, 0);
-//     const endDate = new Date();
-//     const record = await attendance.find({
-//       dept,
-//       className,
-//       subject,
-//       createdAt: { $gte: startDate, $lte: endDate },
-//     });
-//     res.status(200).json(record);
-//   } catch (error) {
-//     res.status(400).json({ error: error.message });
-//   }
-// });
-router.get("/:dept/:className/:subject/lastweek", async (req, res) => {
+router.get("/:dept/:className/:subject/lastclasses", async (req, res) => {
   try {
     const { dept, className, subject } = req.params;
 
-    // build our 7‑day window
-    const endDate = new Date();                   // today, e.g. 2025‑04‑19T...
-    endDate.setHours(23, 59, 59, 999);
-    const startDate = new Date(endDate);
-    startDate.setDate(endDate.getDate() - 6);     // 6 days before → total 7 days
-    startDate.setHours(0, 0, 0, 0);
-
-    // 1) Aggregate: group by date, sum present/absent
     const raw = await attendance.aggregate([
-      { 
-        $match: { 
-          dept, 
-          className, 
-          subject, 
-          createdAt: { $gte: startDate, $lte: endDate } 
-        } 
-      },
+      // 1) filter to this dept/class/subject
       {
-        $group: {
-          _id: {
+        $match: { dept, className, subject }
+      },
+
+      // 2) project a "sessionDate" string = YYYY‑MM‑DD of when the record was created
+      {
+        $project: {
+          sessionDate: {
             $dateToString: { format: "%Y-%m-%d", date: "$createdAt" }
           },
-          presentCount: { 
-            $sum: { $cond: ["$isPresent", 1, 0] } 
+          isPresent: 1
+        }
+      },
+
+      // 3) group by that sessionDate, summing present/absent
+      {
+        $group: {
+          _id: "$sessionDate",
+          presentCount: {
+            $sum: { $cond: ["$isPresent", 1, 0] }
           },
-          absentCount: { 
-            $sum: { $cond: ["$isPresent", 0, 1] } 
+          absentCount: {
+            $sum: { $cond: ["$isPresent", 0, 1] }
           }
         }
       },
+
+      // 4) sort by date descending (newest session first) and take 7
+      { $sort: { "_id": -1 } },
+      { $limit: 7 },
+
+      // 5) put back into ascending order (oldest ⇒ newest)
+      { $sort: { "_id": 1 } },
+
+      // 6) clean up field names
       {
         $project: {
           _id: 0,
@@ -178,29 +167,12 @@ router.get("/:dept/:className/:subject/lastweek", async (req, res) => {
           studentsPresent: "$presentCount",
           studentsAbsent: "$absentCount"
         }
-      },
-      { $sort: { date: 1 } }
+      }
     ]);
 
-    // 2) Build a full 7‑day result, filling in zeros where needed
-    const summary = [];
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startDate);
-      day.setDate(startDate.getDate() + i);
-      const dayStr = day.toISOString().split("T")[0]; // "YYYY-MM-DD"
-
-      const found = raw.find(r => r.date === dayStr);
-      summary.push({
-        date: dayStr,
-        studentsPresent: found ? found.studentsPresent : 0,
-        studentsAbsent:  found ? found.studentsAbsent  : 0
-      });
-    }
-
-    res.status(200).json(summary);
-
+    res.status(200).json(raw);
   } catch (err) {
-    console.error("Error in lastweek route:", err);
+    console.error("Error in lastclasses route:", err);
     res.status(500).json({ error: err.message });
   }
 });
