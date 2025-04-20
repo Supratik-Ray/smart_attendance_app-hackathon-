@@ -24,48 +24,63 @@ router.delete("/", async (req, res) => {
 });
 
 
-// To get particular attendance of a student for today-working
+// ✅ Utility function
+function countAttendance(records) {
+  let present = 0, absent = 0;
+  for (const record of records) {
+    if (record.isPresent) present++;
+    else absent++;
+  }
+  return { present, absent, total: present + absent };
+}
+
+// 📅 1. Attendance for today
 router.get("/:subject/:studentRoll/today", async (req, res) => {
   try {
     const { subject, studentRoll } = req.params;
+
     const startOfDay = new Date();
     startOfDay.setHours(0, 0, 0, 0);
+
     const endOfDay = new Date();
     endOfDay.setHours(23, 59, 59, 999);
-    const studentAttendance = await attendance.find({
+
+    const records = await attendance.find({
       subject,
       studentRoll,
       createdAt: { $gte: startOfDay, $lte: endOfDay },
     });
-    res.send(studentAttendance);
+
+    res.json(countAttendance(records));
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// To get a particular attendance of a student for last week
-router.get("/:subject/:studentRoll/lastweek", async (req, res) => {
+// 📅 2. Attendance for last 7 days
+router.get("/:subject/:studentRoll/last7days", async (req, res) => {
   try {
     const { subject, studentRoll } = req.params;
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 7);
     startDate.setHours(0, 0, 0, 0);
+
     const endDate = new Date();
 
-    const studentAttendance = await attendance.find({
+    const records = await attendance.find({
       subject,
       studentRoll,
       createdAt: { $gte: startDate, $lte: endDate },
     });
 
-    res.send(studentAttendance);
+    res.json(countAttendance(records));
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// To get a particular attendance of a student for last 30 days
+// 📅 3. Attendance for last 30 days
 router.get("/:subject/:studentRoll/last30days", async (req, res) => {
   try {
     const { subject, studentRoll } = req.params;
@@ -73,26 +88,29 @@ router.get("/:subject/:studentRoll/last30days", async (req, res) => {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - 30);
     startDate.setHours(0, 0, 0, 0);
+
     const endDate = new Date();
 
-    const studentAttendance = await attendance.find({
+    const records = await attendance.find({
       subject,
       studentRoll,
       createdAt: { $gte: startDate, $lte: endDate },
     });
 
-    res.send(studentAttendance);
+    res.json(countAttendance(records));
   } catch (err) {
-    res.status(500).json({ err: err.message });
+    res.status(500).json({ error: err.message });
   }
 });
 
-//To get all the attendance record of a particular student of a particular subject
+// 📅 4. All-time attendance
 router.get("/:dept/:studentRoll/:subject", async (req, res) => {
   try {
     const { dept, studentRoll, subject } = req.params;
-    const record = await attendance.find({ dept, studentRoll, subject });
-    res.status(200).json(record);
+
+    const records = await attendance.find({ dept, studentRoll, subject });
+
+    res.json(countAttendance(records));
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
