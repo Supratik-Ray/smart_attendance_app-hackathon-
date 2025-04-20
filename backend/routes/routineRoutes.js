@@ -6,6 +6,50 @@ const Teacher = require('../models/teacherSchema');
 
 const router = express.Router()
 
+// Get sessions by department, semester, section and day
+router.get('/classRoutine', async (req, res) => {
+    const { department, semester, section, day } = req.query;
+
+    if (!department || !semester || !section || !day) {
+        return res.status(400).json({ message: "All query parameters (department, semester, section, day) are required." });
+    }
+
+    try {
+        const sessions = await Routine.find({
+            department,
+            semester,
+            section,
+            day
+        });
+
+        if (!sessions.length) {
+            return res.status(404).json({ message: "No sessions found for the specified parameters." });
+        }
+
+        // Sort sessions based on startTime in hh:mm AM/PM format
+        sessions.sort((a, b) => {
+            const parseTime = (timeStr) => {
+                const [time, modifier] = timeStr.split(" ");
+                let [hours, minutes] = time.split(":").map(Number);
+
+                if (modifier === "PM" && hours !== 12) hours += 12;
+                if (modifier === "AM" && hours === 12) hours = 0;
+
+                return hours * 60 + minutes;
+            };
+
+            return parseTime(a.startTime) - parseTime(b.startTime);
+        });
+
+        res.status(200).json({ sessions });
+
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
+
+
 // Delete all routines (sessions)
 router.delete('/', async (req, res) => {
     try {
