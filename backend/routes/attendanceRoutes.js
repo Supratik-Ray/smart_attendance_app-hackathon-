@@ -104,7 +104,7 @@ router.get("/:subject/:studentRoll/last30days", async (req, res) => {
 });
 
 // 📅 4. All-time attendance
-router.get("/:dept/:studentRoll/:subject", async (req, res) => {
+router.get("/:subject/:studentRoll/total", async (req, res) => {
   try {
     const { dept, studentRoll, subject } = req.params;
 
