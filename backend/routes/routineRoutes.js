@@ -7,8 +7,8 @@ const Teacher = require('../models/teacherSchema');
 const router = express.Router()
 
 // Get sessions by department, semester, section and day
-router.get('/classRoutine', async (req, res) => {
-    const { department, semester, section, day } = req.query;
+router.get('/classRoutine/:department/:semester/:section/:day', async (req, res) => {
+    const { department, semester, section, day } = req.params;
 
     if (!department || !semester || !section || !day) {
         return res.status(400).json({ message: "All query parameters (department, semester, section, day) are required." });
