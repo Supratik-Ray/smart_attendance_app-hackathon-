@@ -106,9 +106,9 @@ router.get("/:subject/:studentRoll/last30days", async (req, res) => {
 // 📅 4. All-time attendance
 router.get("/:subject/:studentRoll/total", async (req, res) => {
   try {
-    const { dept, studentRoll, subject } = req.params;
+    const { studentRoll, subject } = req.params;
 
-    const records = await attendance.find({ dept, studentRoll, subject });
+    const records = await attendance.find({ studentRoll, subject });
 
     res.json(countAttendance(records));
   } catch (error) {
