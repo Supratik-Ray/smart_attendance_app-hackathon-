@@ -6,6 +6,31 @@ const Teacher = require('../models/teacherSchema');
 
 const router = express.Router()
 
+// Get unique subject names for a particular dept, sem, section
+router.get('/uniqueSubjects/:department/:semester/:section', async (req, res) => {
+    const { department, semester, section } = req.params;
+
+    if (!department || !semester || !section) {
+        return res.status(400).json({ message: "Department, semester, and section are required." });
+    }
+
+    try {
+        const uniqueSubjects = await Routine.distinct("subject", {
+            department,
+            semester,
+            section
+        });
+
+        if (!uniqueSubjects.length) {
+            return res.status(404).json({ message: "No subjects found for the specified parameters." });
+        }
+
+        res.status(200).json({ subjects: uniqueSubjects });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+});
+
 // Get sessions by department, semester, section and day
 router.get('/classRoutine/:department/:semester/:section/:day', async (req, res) => {
     const { department, semester, section, day } = req.params;
